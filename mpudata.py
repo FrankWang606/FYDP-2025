@@ -10,3 +10,6 @@ class MPUData:
 
     def __repr__(self):
         return f"MPUData(ax={self.ax}, ay={self.ay}, az={self.az}, rx={self.rx}, ry={self.ry}, rz={self.rz})"
+    def printself(self):
+        print(f"MPUData(ax={self.ax}, ay={self.ay}, az={self.az}, rx={self.rx}, ry={self.ry}, rz={self.rz})")
+        return

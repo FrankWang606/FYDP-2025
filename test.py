@@ -5,6 +5,7 @@ import time
 import keyboard  # 导入 keyboard 库
 from mpudata import MPUData 
 
+TEST_FINGER = 0 # 0 thumb  1 forefinger  2 midfinger 
 # 设置串口参数
 ser = serial.Serial('COM3', 9600)  # 根据实际情况更改 COM 端口
 
@@ -43,12 +44,17 @@ def read_data():
 
 # 打印队列内容的函数，用于测试
 def print_queues():
-    global running
+    global running,TEST_FINGER
     while running:
-        print("MPU0 Queue:", len(mpu0_queue))
-        print("MPU1 Queue:", len(mpu1_queue))
-        print("MPU2 Queue:", len(mpu2_queue))
-        time.sleep(2)  # 每 2 秒打印一次队列内容
+        if(TEST_FINGER == 0 and len(mpu0_queue)>0):
+            data = mpu0_queue[-1]
+            data.printself()
+        elif(TEST_FINGER == 1 and len(mpu1_queue)>0):
+            data = mpu1_queue[-1]
+            data.printself()
+        elif(TEST_FINGER == 2 and len(mpu2_queue)>0):
+            data = mpu2_queue[-1]
+            data.printself()
 
 # 监听组合键的函数
 def listen_for_exit():

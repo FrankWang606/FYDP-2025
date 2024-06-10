@@ -66,11 +66,13 @@ def thumb_up():
 def ges_thumb_up():
     global current_gesture,running
     while running:
-        if len(mpu1_queue) == 0:
+        mpu0 = mpu0_queue
+        mpu1 = mpu1_queue
+        if len(mpu0) <= 5 or len(mpu1) <= 5:
             continue
-        data = mpu1_queue[-1]
+        data = mpu0[-1]
         data.printself()
-        if(thumb_up()):
+        if(Recognizer.thumb_up(mpu0,mpu1)):
             with lock:
                 current_gesture = 0
             time.sleep(3)

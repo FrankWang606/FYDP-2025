@@ -3,9 +3,10 @@ from collections import deque
 import threading
 import time
 import keyboard  # 导入 keyboard 库
-from mpudata import MPUData 
+from mpudata import MPUData
+import rec_algorithm as Recognizer 
 
-TEST_FINGER = 0 # 0 thumb  1 forefinger  2 midfinger 
+
 lock = threading.Lock()
 # pause_event = threading.Event()
 
@@ -55,7 +56,6 @@ def thumb_up():
     res = True
     for i in range(-4,0):
         if dt0[i].ax >=7 and dt1[i].ay<=-8 and dt1[i].az<=-3:
-        # if dt[i].ax >=7:
             continue
         else:
             res = False
@@ -63,7 +63,7 @@ def thumb_up():
     return res
 
 # 打印队列内容的函数，用于测试
-def print_queues():
+def ges_thumb_up():
     global current_gesture,running
     while running:
         if len(mpu1_queue) == 0:
@@ -105,9 +105,9 @@ if __name__ == "__main__":
     thread = threading.Thread(target=read_data)
     thread.start()
 
-    # 启动一个线程打印队列内容
-    print_thread = threading.Thread(target=print_queues)
-    print_thread.start()
+    # recognizers
+    ges1 = threading.Thread(target=ges_thumb_up)
+    ges1.start()
 
     # 主线程监听组合键
     listen_for_exit()
@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
     # 等待其他线程结束
     thread.join()
-    print_thread.join()
+    ges1.join()
     ser.close()
 
     print("Program terminated.")

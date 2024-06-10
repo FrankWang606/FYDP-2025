@@ -53,29 +53,26 @@ def read_data():
 def ges_thumb_up():
     global current_gesture,running
     while running:
+        time.sleep(0.1)
         mpu0 = mpu0_queue
         mpu1 = mpu1_queue
+        
         if len(mpu0) <= 5 or len(mpu1) <= 5:
             continue
-        data = mpu0[-1]
-        data.printself()
         if(Recognizer.thumb_up(mpu0,mpu1)):
             with lock:
                 current_gesture = 0
             time.sleep(3)
 
-# 监听组合键的函数
-def listen_for_exit():
-    global running
-    keyboard.add_hotkey('q', lambda: set_running_false())
+
 
 def set_running_false():
     global running
     running = False
     
 def current_state_print(state):
-    if state == -1:
-        print("no gesture detected")
+    # if state == -1:
+        # print("no gesture detected")
     if state == 0:
         print("thumb up")
     elif state == 1:
@@ -90,6 +87,7 @@ def current_state_print(state):
         print("SELFDEFINED") 
 
 if __name__ == "__main__":
+    keyboard.add_hotkey('q', lambda: set_running_false())
     # 启动一个线程读取串口数据
     thread = threading.Thread(target=read_data)
     thread.start()
@@ -98,8 +96,6 @@ if __name__ == "__main__":
     ges1 = threading.Thread(target=ges_thumb_up)
     ges1.start()
 
-    # 主线程监听组合键
-    listen_for_exit()
 
     while running:
         current_state_print(current_gesture)
@@ -107,7 +103,7 @@ if __name__ == "__main__":
             current_gesture = -1
             time.sleep(3)
             continue
-        time.sleep(0.2)
+        time.sleep(0.5)
 
     # 等待其他线程结束
     thread.join()

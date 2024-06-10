@@ -11,7 +11,7 @@ import rec_algorithm as Recognizer
 lock = threading.Lock()
 # pause_event = threading.Event()
 
-current_gesture = -1
+current_gesture = -1 # 0 thumb up, 1 thumb down, 2 wave, 3 pinch in, 4 palm flip, 5 self record
 # 设置串口参数
 ser = serial.Serial('COM3', 9600)  # 根据实际情况更改 COM 端口
 
@@ -49,7 +49,7 @@ def read_data():
                 mpu2_queue.append(mpu_data)
 
 
-# 打印队列内容的函数，用于测试
+# recognizers
 def ges_thumb_up():
     global current_gesture,running
     while running:
@@ -62,6 +62,20 @@ def ges_thumb_up():
         if(Recognizer.thumb_up(mpu0,mpu1)):
             with lock:
                 current_gesture = 0
+            time.sleep(3)
+            
+def ges_thumb_down():
+    global current_gesture,running
+    while running:
+        time.sleep(0.1)
+        mpu0 = mpu0_queue
+        mpu1 = mpu1_queue
+        
+        if len(mpu0) <= 5 or len(mpu1) <= 5:
+            continue
+        if(Recognizer.thumb_down(mpu0,mpu1)):
+            with lock:
+                current_gesture = 1
             time.sleep(3)
 
 
@@ -95,7 +109,9 @@ if __name__ == "__main__":
     # recognizers
     ges1 = threading.Thread(target=ges_thumb_up)
     ges1.start()
-
+    ges2 = threading.Thread(target=ges_thumb_down)
+    ges2.start()
+    
 
     while running:
         current_state_print(current_gesture)
@@ -108,6 +124,7 @@ if __name__ == "__main__":
     # 等待其他线程结束
     thread.join()
     ges1.join()
+    ges2.join()
     ser.close()
 
     print("Program terminated.")

@@ -1,3 +1,4 @@
+import sys
 import serial
 from collections import deque
 import threading
@@ -87,3 +88,4 @@ if __name__ == "__main__":
     ser.close()
 
     print("Program terminated.")
+    sys.exit(0)

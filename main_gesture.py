@@ -1,3 +1,4 @@
+import sys
 import serial
 from collections import deque
 import threading
@@ -47,20 +48,6 @@ def read_data():
             elif mpu_name == "MPU2":
                 mpu2_queue.append(mpu_data)
 
-def thumb_up():
-    if len(mpu0_queue) <= 5 or len(mpu1_queue) <= 5:
-        return False
-    # pause_event.wait()
-    dt0 = mpu0_queue
-    dt1 = mpu1_queue
-    res = True
-    for i in range(-4,0):
-        if dt0[i].ax >=7 and dt1[i].ay<=-8 and dt1[i].az<=-3:
-            continue
-        else:
-            res = False
-            break
-    return res
 
 # 打印队列内容的函数，用于测试
 def ges_thumb_up():
@@ -128,3 +115,4 @@ if __name__ == "__main__":
     ser.close()
 
     print("Program terminated.")
+    sys.exit(0)

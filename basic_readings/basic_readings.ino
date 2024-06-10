@@ -11,7 +11,7 @@ Adafruit_MPU6050 mpu2;
 
 void configureMPU(Adafruit_MPU6050 &mpu) {
   mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
-  mpu.setGyroRange(MPU6050_RANGE_500_DEG);
+  mpu.setGyroRange(MPU6050_RANGE_1000_DEG);
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
 }
 
@@ -57,7 +57,7 @@ void setup(void) {
 
 void loop() {
   sensors_event_t a, g, temp;
-  // Read from MPU6050 on channel 2
+
   I2CMux.openChannel(2);
   mpu0.getEvent(&a, &g, &temp);
   Serial.print("MPU0,");
@@ -69,7 +69,6 @@ void loop() {
   Serial.print(g.gyro.z); Serial.println();
   I2CMux.closeAll();
 
-  // Read from MPU6050 on channel 4
   I2CMux.openChannel(4);
   mpu1.getEvent(&a, &g, &temp);
   Serial.print("MPU1,");
@@ -81,7 +80,7 @@ void loop() {
   Serial.print(g.gyro.z); Serial.println();
   I2CMux.closeAll();
 
-  // Read from MPU6050 on channel 6
+
   I2CMux.openChannel(6);
   mpu2.getEvent(&a, &g, &temp);
   Serial.print("MPU2,");

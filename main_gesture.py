@@ -78,7 +78,19 @@ def ges_thumb_down():
                 current_gesture = 1
             time.sleep(3)
 
-
+def ges_wave():
+    global current_gesture,running
+    while running:
+        time.sleep(0.1)
+        mpu0 = mpu0_queue
+        mpu1 = mpu1_queue
+        
+        if len(mpu0) < 15 or len(mpu1) < 15:
+            continue
+        if(Recognizer.wave(mpu0,mpu1)):
+            with lock:
+                current_gesture = 2
+            time.sleep(3)
 
 def set_running_false():
     global running
@@ -111,7 +123,8 @@ if __name__ == "__main__":
     ges1.start()
     ges2 = threading.Thread(target=ges_thumb_down)
     ges2.start()
-    
+    ges3 = threading.Thread(target=ges_wave)
+    ges3.start()   
 
     while running:
         current_state_print(current_gesture)
@@ -125,6 +138,7 @@ if __name__ == "__main__":
     thread.join()
     ges1.join()
     ges2.join()
+    ges3.join()
     ser.close()
 
     print("Program terminated.")

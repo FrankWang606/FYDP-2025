@@ -24,3 +24,23 @@ def thumb_down(mpu0,mpu1):
     if avg_ax0 <=-7.5 and avg_ay1>=8 and avg_az1>=0:
         return True
     return False
+
+def wave(mpu0,mpu1):
+    if len(mpu0) < 15 or len(mpu1) < 15:
+        return False
+    # pause_event.wait()
+    max_ax0 = 0
+    min_ax0 = 0
+    max_rz0 = 0
+    min_rz0 = 0
+    for i in range(0,len(mpu0)):
+        max_ax0 = max(max_ax0,mpu0[i].ax)
+        min_ax0 = min(min_ax0,mpu0[i].ax)
+        max_rz0 = max(max_rz0,mpu0[i].rz)
+        min_rz0 = min(min_rz0,mpu0[i].rz)
+    diff_ax0 = max_ax0 - min_ax0
+    diff_rz0 = max_rz0 - min_rz0
+    
+    if max_ax0 >=9 and min_ax0<=7 and max_rz0>=2 and min_rz0<=-2 and diff_ax0>2.5 and diff_rz0>4:
+        return True
+    return False

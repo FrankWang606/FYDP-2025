@@ -83,11 +83,11 @@ def ges_wave():
     while running:
         time.sleep(0.1)
         mpu0 = mpu0_queue
-        mpu1 = mpu1_queue
+        mpu2 = mpu2_queue
         
-        if len(mpu0) < 15 or len(mpu1) < 15:
+        if len(mpu0) < 15 or len(mpu2) < 15:
             continue
-        if(Recognizer.wave(mpu0,mpu1)):
+        if(Recognizer.wave(mpu0,mpu2)):
             with lock:
                 current_gesture = 2
             time.sleep(3)

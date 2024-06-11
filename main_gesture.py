@@ -53,7 +53,7 @@ def read_data():
 def ges_thumb_up():
     global current_gesture,running
     while running:
-        time.sleep(0.1)
+        time.sleep(0.05)
         mpu0 = mpu0_queue
         mpu1 = mpu1_queue
         
@@ -67,7 +67,7 @@ def ges_thumb_up():
 def ges_thumb_down():
     global current_gesture,running
     while running:
-        time.sleep(0.1)
+        time.sleep(0.05)
         mpu0 = mpu0_queue
         mpu1 = mpu1_queue
         
@@ -81,7 +81,7 @@ def ges_thumb_down():
 def ges_wave():
     global current_gesture,running
     while running:
-        time.sleep(0.1)
+        time.sleep(0.05)
         mpu0 = mpu0_queue
         mpu2 = mpu2_queue
         

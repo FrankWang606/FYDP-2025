@@ -80,3 +80,28 @@ def pinch(mpu0,mpu1):
     if mpu1_condition :
         return True
     return False
+
+def flip(mpu0,mpu1,mpu2):
+    if len(mpu0) < 15 or len(mpu1) < 15 or len(mpu2)<15:
+        return False
+    # pause_event.wait()
+    cond_az0_pos1 = (mpu0[0].az > 8 or mpu0[1].az >8 or mpu0[2].az >8)
+    cond_az0_pos2 = (mpu0[-1].az < -5 or mpu0[-2].az < -5 or mpu0[-3].az < -5)
+    cond_az0_neg1 = (mpu0[0].az < -5 or mpu0[1].az < -5 or mpu0[2].az < -5)
+    cond_az0_neg2 = (mpu0[-1].az > 8 or mpu0[-2].az >8 or mpu0[-3].az >8)
+    mpu0_condition = (cond_az0_pos1 and cond_az0_pos2) or (cond_az0_neg1 and cond_az0_neg2)
+    
+    cond_az1_pos1 = (mpu1[0].az > 8 or mpu1[1].az >8 or mpu1[2].az >8)
+    cond_az1_pos2 = (mpu1[-1].az < -8 or mpu1[-2].az < -8 or mpu1[-3].az < -8)
+    cond_az1_neg1 = (mpu1[0].az < -8 or mpu1[1].az < -8 or mpu1[2].az < -8)
+    cond_az1_neg2 = (mpu1[-1].az > 8 or mpu1[-2].az >8 or mpu1[-3].az >8)
+    mpu1_condition = (cond_az1_pos1 and cond_az1_pos2) or (cond_az1_neg1 and cond_az1_neg2)
+    
+    cond_az2_pos1 = (mpu2[0].az > 8 or mpu2[1].az >8 or mpu2[2].az >8)
+    cond_az2_pos2 = (mpu2[-1].az < -8 or mpu2[-2].az < -8 or mpu2[-3].az < -8)
+    cond_az2_neg1 = (mpu2[0].az < -8 or mpu2[1].az < -8 or mpu2[2].az < -8)
+    cond_az2_neg2 = (mpu2[-1].az > 8 or mpu2[-2].az >8 or mpu2[-3].az >8)
+    mpu2_condition = (cond_az2_pos1 and cond_az2_pos2) or (cond_az2_neg1 and cond_az2_neg2)
+    if mpu1_condition and mpu2_condition and mpu0_condition:
+        return True
+    return False

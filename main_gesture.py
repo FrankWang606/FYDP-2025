@@ -125,20 +125,8 @@ def set_running_false():
     running = False
     
 def current_state_print(state):
-    # if state == -1:
-        # print("no gesture detected")
-    if state == 0:
-        print("thumb up")
-    elif state == 1:
-        print("thumb down")
-    elif state == 2:
-        print("wave")
-    elif state == 3:
-        print("pinch in")
-    elif state == 4:
-        print("palm flip")
-    elif state == 5:
-        print("SELFDEFINED") 
+    with open('gesture.txt', 'w') as f:
+        f.write(str(state))
 
 if __name__ == "__main__":
     keyboard.add_hotkey('q', lambda: set_running_false())
@@ -162,7 +150,7 @@ if __name__ == "__main__":
         current_state_print(current_gesture)
         if(current_gesture != -1):
             current_gesture = -1
-            time.sleep(3)
+            time.sleep(2.5)
             continue
         time.sleep(0.5)
 

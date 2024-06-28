@@ -25,7 +25,7 @@ class GestureApp(QWidget):
         layout.addWidget(self.start_button)
 
         gestures = ["thumb up", "thumb down", "wave", "pinch in", "palm flip", "record"]
-        keys = ["", "up", "down", "left", "right", "enter"]
+        keys = ["", "up", "down", "left", "right", "enter", "double click", "right click"]
 
         self.blocks = []
         self.combos = []
@@ -95,7 +95,13 @@ class GestureApp(QWidget):
 
                             # 执行按键绑定
                             if state in range(6) and self.key_bindings[state]:
-                                pyautogui.press(self.key_bindings[state])
+                                action = self.key_bindings[state]
+                                if action == "double click":
+                                    pyautogui.doubleClick()
+                                elif action == "right click":
+                                    pyautogui.rightClick()
+                                else:
+                                    pyautogui.press(action)
                         except ValueError:
                             colors = ["white", "white", "white", "white", "white", "white"]
 

@@ -3,8 +3,9 @@ import os
 import subprocess
 import threading
 import time
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QLabel, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QLabel, QHBoxLayout, QComboBox
 from PyQt5.QtGui import QColor, QPalette
+import pyautogui
 
 class GestureApp(QWidget):
     def __init__(self):
@@ -12,6 +13,7 @@ class GestureApp(QWidget):
         self.initUI()
         self.process = None
         self.running = True
+        self.key_bindings = [""] * 6  # 存储每个手势对应的按键绑定
 
     def initUI(self):
         self.setWindowTitle('Gesture Detection App')
@@ -23,27 +25,44 @@ class GestureApp(QWidget):
         layout.addWidget(self.start_button)
 
         gestures = ["thumb up", "thumb down", "wave", "pinch in", "palm flip", "record"]
+        keys = ["", "up", "down", "left", "right", "enter"]
+
         self.blocks = []
+        self.combos = []
         for gesture in gestures:
             block_layout = QHBoxLayout()
+            
             block_label = QLabel(gesture, self)
             block_label.setFixedSize(100, 100)
+            
             block = QLabel(self)
             block.setAutoFillBackground(True)
             block.setFixedSize(200, 100)
             palette = block.palette()
             palette.setColor(QPalette.Window, QColor('white'))
             block.setPalette(palette)
+            
+            combo = QComboBox(self)
+            combo.addItems(keys)
+            combo.currentIndexChanged.connect(self.update_key_bindings)
+            
             block_layout.addWidget(block_label)
             block_layout.addWidget(block)
+            block_layout.addWidget(combo)
             layout.addLayout(block_layout)
+            
             self.blocks.append(block)
+            self.combos.append(combo)
 
         self.exit_button = QPushButton('Exit', self)
         self.exit_button.clicked.connect(self.exit_application)
         layout.addWidget(self.exit_button)
 
         self.setLayout(layout)
+
+    def update_key_bindings(self):
+        for i, combo in enumerate(self.combos):
+            self.key_bindings[i] = combo.currentText()
 
     def start_detection(self):
         self.running = True
@@ -73,6 +92,10 @@ class GestureApp(QWidget):
                                 colors = ["white", "white", "white", "white", "white", "white"]
                             else:
                                 colors = ["white", "white", "white", "white", "white", "white"]
+
+                            # 执行按键绑定
+                            if state in range(6) and self.key_bindings[state]:
+                                pyautogui.press(self.key_bindings[state])
                         except ValueError:
                             colors = ["white", "white", "white", "white", "white", "white"]
 
@@ -80,7 +103,7 @@ class GestureApp(QWidget):
                             palette = self.blocks[i].palette()
                             palette.setColor(QPalette.Window, QColor(color))
                             self.blocks[i].setPalette(palette)
-                        time.sleep(2.3)
+                        time.sleep(2)
 
     def exit_application(self):
         self.running = False

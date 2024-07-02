@@ -102,6 +102,7 @@ class GestureApp(QWidget):
                                     pyautogui.rightClick()
                                 else:
                                     pyautogui.press(action)
+                                time.sleep(2)
                         except ValueError:
                             colors = ["white", "white", "white", "white", "white", "white"]
 
@@ -109,7 +110,7 @@ class GestureApp(QWidget):
                             palette = self.blocks[i].palette()
                             palette.setColor(QPalette.Window, QColor(color))
                             self.blocks[i].setPalette(palette)
-                        time.sleep(2)
+                        time.sleep(0.1)
 
     def exit_application(self):
         self.running = False

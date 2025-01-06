@@ -108,7 +108,7 @@ class GestureApp(QWidget):
                             elif state == 4:
                                 colors = ["white", "white", "white", "white", "purple", "white"]
                             elif state == 5:
-                                colors = ["white", "white", "white", "white", "white", "white"]
+                                colors = ["white", "white", "white", "white", "white", "black"]
                             else:
                                 colors = ["white", "white", "white", "white", "white", "white"]
 

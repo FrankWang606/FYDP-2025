@@ -2,6 +2,18 @@
 from collections import deque
 import time
 from mpudata import MPUData
+import math
+
+def calculate_distance(mpu_data1, mpu_data2):
+    """计算两个 MPUData 对象的欧几里得距离"""
+    return math.sqrt(
+        (mpu_data1.ax - mpu_data2.ax) ** 2 +
+        (mpu_data1.ay - mpu_data2.ay) ** 2 +
+        (mpu_data1.az - mpu_data2.az) ** 2 +
+        (mpu_data1.rx - mpu_data2.rx) ** 2 +
+        (mpu_data1.ry - mpu_data2.ry) ** 2 +
+        (mpu_data1.rz - mpu_data2.rz) ** 2
+    )
 
 def thumb_up(mpu0,mpu1):
     if len(mpu0) <= 5 or len(mpu1) <= 5:
@@ -76,7 +88,7 @@ def pinch(mpu0,mpu1):
 
     diff_az1 = max_az1 - min_az1
 
-    mpu1_condition = (diff_az1>20 and avg_stable_az1 > 2 and az1_stable_count >=9)
+    mpu1_condition = (diff_az1>20 and (max_az1 > 30 or min_az1 <-35) and az1_stable_count >=9)
     if mpu1_condition :
         return True
     return False
@@ -105,3 +117,22 @@ def flip(mpu0,mpu1,mpu2):
     if mpu1_condition and mpu2_condition and mpu0_condition:
         return True
     return False
+
+def record(mpu0, mpu1, mpu2, mpu_record0, mpu_record1, mpu_record2, threshold=4.5):
+    """比较实时手势和录制手势数据，判断相似性"""
+    if len(mpu0) != len(mpu_record0) or len(mpu1) != len(mpu_record1) or len(mpu2) != len(mpu_record2):
+        return False
+
+    def calculate_average_distance(real, recorded):
+        distances = [calculate_distance(real[i], recorded[i]) for i in range(len(real))]
+        return sum(distances) / len(distances)
+
+    avg_distance_mpu0 = calculate_average_distance(mpu0, mpu_record0)
+    avg_distance_mpu1 = calculate_average_distance(mpu1, mpu_record1)
+    avg_distance_mpu2 = calculate_average_distance(mpu2, mpu_record2)
+
+    if threshold == 4.0:
+        print(f"MPU0 Avg Distance: {avg_distance_mpu0}, MPU1 Avg Distance: {avg_distance_mpu1}, MPU2 Avg Distance: {avg_distance_mpu2}")
+
+    # 判断所有平均距离是否小于阈值
+    return avg_distance_mpu0 < threshold and avg_distance_mpu1 < threshold and avg_distance_mpu2 < threshold

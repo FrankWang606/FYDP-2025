@@ -38,8 +38,27 @@ mpu2_queue = deque(maxlen=15)
 recorded_mpu0_queue = deque(maxlen=15)
 recorded_mpu1_queue = deque(maxlen=15)
 recorded_mpu2_queue = deque(maxlen=15)
+
+thumbup_0 = deque(maxlen=10)
+thumbup_1 = deque(maxlen=10)
+thumbup_2 = deque(maxlen=10)
+thumbdown_0 = deque(maxlen=10)
+thumbdown_1 = deque(maxlen=10)
+thumbdown_2 = deque(maxlen=10)
 # 定义一个标志位用于控制线程的运行
 running = True
+
+def load_recorded_data(file_path):
+    """从 JSON 文件加载录制手势数据并还原为 MPUData 队列"""
+    with open(file_path, "r") as f:
+        data = json.load(f)
+    
+    recorded_data = {
+        "mpu0": deque([MPUData(**mpu) for mpu in data["mpu0"]], maxlen=15),
+        "mpu1": deque([MPUData(**mpu) for mpu in data["mpu1"]], maxlen=15),
+        "mpu2": deque([MPUData(**mpu) for mpu in data["mpu2"]], maxlen=15),
+    }
+    return recorded_data
 
 def read_ges_record():
     """读取 ges_record.txt 中的值"""
@@ -87,12 +106,6 @@ def record_gesture():
             recorded_mpu1_queue = deque(recorded_data["mpu1"], maxlen=15)
             recorded_mpu2_queue = deque(recorded_data["mpu2"], maxlen=15)
 
-            print("New recorded queues created:")
-            print(f"MPU0: {list(recorded_mpu0_queue)}")
-            print(f"MPU1: {list(recorded_mpu1_queue)}")
-            print(f"MPU2: {list(recorded_mpu2_queue)}")
-
-            
             print("Gesture recorded successfully!")
             record_state_print(-1)  # 重置状态
             
@@ -131,12 +144,11 @@ def ges_thumb_up():
     global current_gesture,running
     while running:
         time.sleep(0.05)
-        mpu0 = mpu0_queue
-        mpu1 = mpu1_queue
-        
-        if len(mpu0) <= 5 or len(mpu1) <= 5:
-            continue
-        if(Recognizer.thumb_up(mpu0,mpu1)):
+        mpu0 = deque(list(mpu0_queue)[-10:], maxlen=10)
+        mpu1 = deque(list(mpu1_queue)[-10:], maxlen=10)
+        mpu2 = deque(list(mpu2_queue)[-10:], maxlen=10)
+
+        if(Recognizer.record(mpu0,mpu1,mpu2,thumbup_0,thumbup_1,thumbup_2,3.5)):
             with lock:
                 current_gesture = 0
             time.sleep(3)
@@ -145,12 +157,11 @@ def ges_thumb_down():
     global current_gesture,running
     while running:
         time.sleep(0.05)
-        mpu0 = mpu0_queue
-        mpu1 = mpu1_queue
-        
-        if len(mpu0) <= 5 or len(mpu1) <= 5:
-            continue
-        if(Recognizer.thumb_down(mpu0,mpu1)):
+        mpu0 = deque(list(mpu0_queue)[-10:], maxlen=10)
+        mpu1 = deque(list(mpu1_queue)[-10:], maxlen=10)
+        mpu2 = deque(list(mpu2_queue)[-10:], maxlen=10)
+
+        if(Recognizer.record(mpu0,mpu1,mpu2,thumbdown_0,thumbdown_1,thumbdown_2,3)):
             with lock:
                 current_gesture = 1
             time.sleep(3)
@@ -197,6 +208,18 @@ def ges_flip():
                 current_gesture = 4
             time.sleep(3)
 
+def ges_record():
+    global current_gesture,running
+    while running:
+        time.sleep(0.05)
+        mpu0 = mpu0_queue
+        mpu1 = mpu1_queue
+        mpu2 = mpu2_queue
+        if(Recognizer.record(mpu0,mpu1,mpu2,recorded_mpu0_queue,recorded_mpu1_queue,recorded_mpu2_queue)):
+            with lock:
+                current_gesture = 5
+            time.sleep(3)
+
 def set_running_false():
     global running
     running = False
@@ -215,6 +238,15 @@ if __name__ == "__main__":
     # 启动一个线程读取串口数据
     thread = threading.Thread(target=read_data)
     thread.start()
+    
+    ges_data = load_recorded_data('thumbup.json')
+    thumbup_0 = deque(list(ges_data["mpu0"])[-10:], maxlen=10)
+    thumbup_1 = deque(list(ges_data["mpu1"])[-10:], maxlen=10)
+    thumbup_2 = deque(list(ges_data["mpu2"])[-10:], maxlen=10)
+    ges_data = load_recorded_data('thumbdown.json')
+    thumbdown_0 = deque(list(ges_data["mpu0"])[-10:], maxlen=10)
+    thumbdown_1 = deque(list(ges_data["mpu1"])[-10:], maxlen=10)
+    thumbdown_2 = deque(list(ges_data["mpu2"])[-10:], maxlen=10)
 
     # recognizers
     ges1 = threading.Thread(target=ges_thumb_up)
@@ -227,6 +259,8 @@ if __name__ == "__main__":
     ges4.start() 
     ges5 = threading.Thread(target=ges_flip)
     ges5.start() 
+    ges6 = threading.Thread(target=ges_record)
+    ges6.start()
 
     # 启动录制线程
     record_thread = threading.Thread(target=record_gesture)

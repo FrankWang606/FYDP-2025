@@ -10,7 +10,7 @@ def thumb_up(mpu0,mpu1):
     avg_ax0 = (mpu0[-1].ax + mpu0[-2].ax + mpu0[-3].ax + mpu0[-4].ax)/4
     avg_ay1 = (mpu1[-1].ay + mpu1[-2].ay + mpu1[-3].ay + mpu1[-4].ay)/4
     avg_az1 = (mpu1[-1].az + mpu1[-2].az + mpu1[-3].az + mpu1[-4].az)/4
-    if avg_ax0 >=7 and avg_ay1<=-8 and avg_az1<=-1:
+    if avg_ax0 >=8 and avg_ay1<=-8 and avg_az1<=0:
         return True
     return False
 
@@ -76,7 +76,7 @@ def pinch(mpu0,mpu1):
 
     diff_az1 = max_az1 - min_az1
 
-    mpu1_condition = (diff_az1>25 and avg_stable_az1 > 2 and az1_stable_count >=9)
+    mpu1_condition = (diff_az1>20 and avg_stable_az1 > 2 and az1_stable_count >=9)
     if mpu1_condition :
         return True
     return False

@@ -5,9 +5,24 @@ import threading
 import time
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QLabel, QHBoxLayout, QComboBox
 from PyQt5.QtGui import QColor, QPalette
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtCore import QTimer
 import pyautogui
 
 class GestureApp(QWidget):
+    
+    def show_auto_closing_message_box(self, message, duration=1500):
+        """显示一个自动消失的 QMessageBox"""
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("Notification")
+        msg_box.setText(message)
+        # msg_box.setStandardButtons(QMessageBox.NoButton)  # 去掉按钮
+        msg_box.setStyleSheet("background-color: lightblue;")  # 可选：设置样式
+        msg_box.show()
+
+        # 使用 QTimer 在指定时间后关闭消息框
+        QTimer.singleShot(duration, msg_box.close)
+    
     def __init__(self):
         super().__init__()
         self.initUI()
@@ -23,6 +38,10 @@ class GestureApp(QWidget):
         self.start_button = QPushButton('Start', self)
         self.start_button.clicked.connect(self.start_detection)
         layout.addWidget(self.start_button)
+        
+        self.record_button = QPushButton('Record', self)
+        self.record_button.clicked.connect(self.record_gesture)
+        layout.addWidget(self.record_button)
 
         gestures = ["thumb up", "thumb down", "wave", "pinch in", "palm flip", "record"]
         keys = ["", "up", "down", "left", "right", "enter", "double click", "right click"]
@@ -111,6 +130,16 @@ class GestureApp(QWidget):
                             palette.setColor(QPalette.Window, QColor(color))
                             self.blocks[i].setPalette(palette)
                         time.sleep(0.1)
+
+    def record_gesture(self):
+        """Trigger the recording process."""
+        try:
+            with open("ges_record.txt", "w") as file:
+                file.write("1")  # 写入状态 1 表示进入录制模式
+            self.show_auto_closing_message_box("Gesture recording started. Perform your gesture.")
+        except Exception as e:
+            QMessageBox.warning(self, "Error", f"Failed to start recording: {str(e)}")
+
 
     def exit_application(self):
         self.running = False

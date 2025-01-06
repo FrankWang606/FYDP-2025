@@ -1,4 +1,5 @@
 import sys
+import json
 import serial
 from collections import deque
 import threading
@@ -6,6 +7,19 @@ import time
 import keyboard  # 导入 keyboard 库
 from mpudata import MPUData
 import rec_algorithm as Recognizer 
+
+def mpu_data_to_dict(obj):
+    """将 MPUData 对象转换为字典"""
+    if isinstance(obj, MPUData):
+        return {
+            "ax": obj.ax,
+            "ay": obj.ay,
+            "az": obj.az,
+            "rx": obj.rx,
+            "ry": obj.ry,
+            "rz": obj.rz,
+        }
+    raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
 
 
 lock = threading.Lock()
@@ -19,8 +33,71 @@ ser = serial.Serial('COM3', 9600)  # 根据实际情况更改 COM 端口
 mpu0_queue = deque(maxlen=15)
 mpu1_queue = deque(maxlen=15)
 mpu2_queue = deque(maxlen=15)
+
+# 定义新的全局变量用于存储录制的手势数据
+recorded_mpu0_queue = deque(maxlen=15)
+recorded_mpu1_queue = deque(maxlen=15)
+recorded_mpu2_queue = deque(maxlen=15)
 # 定义一个标志位用于控制线程的运行
 running = True
+
+def read_ges_record():
+    """读取 ges_record.txt 中的值"""
+    try:
+        with open("ges_record.txt", "r") as file:
+            value = file.read().strip()
+            return int(value)  # 将值转换为整数
+    except Exception as e:
+        print(f"Error reading ges_record.txt: {e}")
+        return -1  # 如果读取失败，返回默认值
+    
+def record_gesture():
+    global running,recorded_mpu0_queue, recorded_mpu1_queue, recorded_mpu2_queue
+    while running:
+        if read_ges_record() == 1:  # 进入录制模式
+            recorded_data = {"mpu0": [], "mpu1": [], "mpu2": []}
+            print("Recording gesture...")
+
+            while len(recorded_data["mpu0"]) < 15:
+                # 检查队列中的最新数据
+                if len(mpu0_queue) > 0 and len(recorded_data["mpu0"]) < 15:
+                    mpu0_last = mpu0_queue[-1]
+                    if len(recorded_data["mpu0"]) == 0 or mpu0_last != recorded_data["mpu0"][-1]:
+                        recorded_data["mpu0"].append(mpu0_last)
+
+                if len(mpu1_queue) > 0 and len(recorded_data["mpu1"]) < 15:
+                    mpu1_last = mpu1_queue[-1]
+                    if len(recorded_data["mpu1"]) == 0 or mpu1_last != recorded_data["mpu1"][-1]:
+                        recorded_data["mpu1"].append(mpu1_last)
+
+                if len(mpu2_queue) > 0 and len(recorded_data["mpu2"]) < 15:
+                    mpu2_last = mpu2_queue[-1]
+                    if len(recorded_data["mpu2"]) == 0 or mpu2_last != recorded_data["mpu2"][-1]:
+                        recorded_data["mpu2"].append(mpu2_last)
+
+                time.sleep(0.01)  # 稍作延迟避免过度占用资源
+
+            # 保存录制数据到文件
+            with open("recorded_patterns.json", "w") as f:
+                json.dump(recorded_data, f, default=mpu_data_to_dict)
+                f.write("\n")
+            
+            # 将录制的数据直接加载到新的队列中
+            recorded_mpu0_queue = deque(recorded_data["mpu0"], maxlen=15)
+            recorded_mpu1_queue = deque(recorded_data["mpu1"], maxlen=15)
+            recorded_mpu2_queue = deque(recorded_data["mpu2"], maxlen=15)
+
+            print("New recorded queues created:")
+            print(f"MPU0: {list(recorded_mpu0_queue)}")
+            print(f"MPU1: {list(recorded_mpu1_queue)}")
+            print(f"MPU2: {list(recorded_mpu2_queue)}")
+
+            
+            print("Gesture recorded successfully!")
+            record_state_print(-1)  # 重置状态
+            
+        time.sleep(0.1)
+
 
 def parse_data(data):
     parts = data.split(',')
@@ -127,9 +204,14 @@ def set_running_false():
 def current_state_print(state):
     with open('gesture.txt', 'w') as f:
         f.write(str(state))
+        
+def record_state_print(state):
+    with open('ges_record.txt', 'w') as f:
+        f.write(str(state))
 
 if __name__ == "__main__":
     keyboard.add_hotkey('q', lambda: set_running_false())
+    record_state_print(-1)
     # 启动一个线程读取串口数据
     thread = threading.Thread(target=read_data)
     thread.start()
@@ -146,6 +228,10 @@ if __name__ == "__main__":
     ges5 = threading.Thread(target=ges_flip)
     ges5.start() 
 
+    # 启动录制线程
+    record_thread = threading.Thread(target=record_gesture)
+    record_thread.start()
+
     while running:
         current_state_print(current_gesture)
         if(current_gesture != -1):
@@ -161,6 +247,7 @@ if __name__ == "__main__":
     ges3.join()
     ges4.join()
     ges5.join()
+    record_thread.join()
     ser.close()
 
     print("Program terminated.")

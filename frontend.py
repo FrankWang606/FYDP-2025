@@ -6,7 +6,7 @@ import time
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QLabel, QHBoxLayout, QComboBox
 from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer,Qt
 import pyautogui
 
 class GestureApp(QWidget):
@@ -86,10 +86,13 @@ class GestureApp(QWidget):
             
             block_label = QLabel(gesture, self)
             block_label.setFixedSize(100, 100)
+            block_label.setAlignment(Qt.AlignVCenter | Qt.AlignRight)  # 垂直居中，靠右对齐
+            block_label.setStyleSheet("font-size: 18px; font-weight: bold;")
             
             block = QLabel(self)
             block.setAutoFillBackground(True)
-            block.setFixedSize(200, 100)
+            block.setFixedSize(100, 100)
+            # block.setStyleSheet(" border-radius: 40px;")  # 设置圆形样式
             palette = block.palette()
             palette.setColor(QPalette.Window, QColor('white'))
             block.setPalette(palette)

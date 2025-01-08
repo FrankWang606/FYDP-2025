@@ -65,14 +65,16 @@ class GestureApp(QWidget):
 
         layout = QVBoxLayout()
 
-        # 美化按钮
+        # 将 Start 和 Record 按钮放在同一行
+        buttons_layout = QHBoxLayout()
         self.start_button = QPushButton('Start', self)
         self.start_button.clicked.connect(self.start_detection)
-        layout.addWidget(self.start_button)
+        buttons_layout.addWidget(self.start_button)
 
         self.record_button = QPushButton('Record', self)
         self.record_button.clicked.connect(self.record_gesture)
-        layout.addWidget(self.record_button)
+        buttons_layout.addWidget(self.record_button)
+        layout.addLayout(buttons_layout)  # 添加按钮行到主布局
 
         gestures = ["thumb up", "thumb down", "wave", "pinch in", "palm flip", "record"]
         keys = ["", "up", "down", "left", "right", "enter", "double click", "right click"]

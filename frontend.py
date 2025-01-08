@@ -33,12 +33,43 @@ class GestureApp(QWidget):
     def initUI(self):
         self.setWindowTitle('Gesture Detection App')
 
+        self.setStyleSheet("""
+
+            QPushButton {
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                padding: 10px;
+                border-radius: 5px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+            QPushButton:pressed {
+                background-color: #3e8e41;
+            }
+            QLabel {
+                font-size: 14px;
+                font-weight: bold;
+                color: #333;
+            }
+            QComboBox {
+                border: 1px solid #ccc;
+                padding: 5px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+        """)
+
         layout = QVBoxLayout()
 
+        # 美化按钮
         self.start_button = QPushButton('Start', self)
         self.start_button.clicked.connect(self.start_detection)
         layout.addWidget(self.start_button)
-        
+
         self.record_button = QPushButton('Record', self)
         self.record_button.clicked.connect(self.record_gesture)
         layout.addWidget(self.record_button)

@@ -39,12 +39,15 @@ recorded_mpu0_queue = deque(maxlen=15)
 recorded_mpu1_queue = deque(maxlen=15)
 recorded_mpu2_queue = deque(maxlen=15)
 
-thumbup_0 = deque(maxlen=10)
-thumbup_1 = deque(maxlen=10)
-thumbup_2 = deque(maxlen=10)
-thumbdown_0 = deque(maxlen=10)
-thumbdown_1 = deque(maxlen=10)
-thumbdown_2 = deque(maxlen=10)
+thumbup_0 = deque(maxlen=5)
+thumbup_1 = deque(maxlen=5)
+thumbup_2 = deque(maxlen=5)
+thumbdown_0 = deque(maxlen=5)
+thumbdown_1 = deque(maxlen=5)
+thumbdown_2 = deque(maxlen=5)
+pinch_0 = deque(maxlen=15)
+pinch_1 = deque(maxlen=15)
+pinch_2 = deque(maxlen=15)
 # 定义一个标志位用于控制线程的运行
 running = True
 
@@ -144,9 +147,9 @@ def ges_thumb_up():
     global current_gesture,running
     while running:
         time.sleep(0.05)
-        mpu0 = deque(list(mpu0_queue)[-10:], maxlen=10)
-        mpu1 = deque(list(mpu1_queue)[-10:], maxlen=10)
-        mpu2 = deque(list(mpu2_queue)[-10:], maxlen=10)
+        mpu0 = deque(list(mpu0_queue)[-5:], maxlen=5)
+        mpu1 = deque(list(mpu1_queue)[-5:], maxlen=5)
+        mpu2 = deque(list(mpu2_queue)[-5:], maxlen=5)
 
         if(Recognizer.record(mpu0,mpu1,mpu2,thumbup_0,thumbup_1,thumbup_2,3.5)):
             with lock:
@@ -157,11 +160,11 @@ def ges_thumb_down():
     global current_gesture,running
     while running:
         time.sleep(0.05)
-        mpu0 = deque(list(mpu0_queue)[-10:], maxlen=10)
-        mpu1 = deque(list(mpu1_queue)[-10:], maxlen=10)
-        mpu2 = deque(list(mpu2_queue)[-10:], maxlen=10)
+        mpu0 = deque(list(mpu0_queue)[-5:], maxlen=5)
+        mpu1 = deque(list(mpu1_queue)[-5:], maxlen=5)
+        mpu2 = deque(list(mpu2_queue)[-5:], maxlen=5)
 
-        if(Recognizer.record(mpu0,mpu1,mpu2,thumbdown_0,thumbdown_1,thumbdown_2,3)):
+        if(Recognizer.record(mpu0,mpu1,mpu2,thumbdown_0,thumbdown_1,thumbdown_2,3.5)):
             with lock:
                 current_gesture = 1
             time.sleep(3)
@@ -183,13 +186,12 @@ def ges_wave():
 def ges_pinch():
     global current_gesture,running
     while running:
-        time.sleep(0.03)
+        time.sleep(0.05)
         mpu0 = mpu0_queue
         mpu1 = mpu1_queue
-        
-        if len(mpu0) < 15 or len(mpu1) < 15:
-            continue
-        if(Recognizer.pinch(mpu0,mpu1)):
+        mpu2 = mpu2_queue
+
+        if(Recognizer.record(mpu0,mpu1,mpu2,pinch_0,pinch_1,pinch_2,4.5)):
             with lock:
                 current_gesture = 3
             time.sleep(3)
@@ -240,13 +242,17 @@ if __name__ == "__main__":
     thread.start()
     
     ges_data = load_recorded_data('thumbup.json')
-    thumbup_0 = deque(list(ges_data["mpu0"])[-10:], maxlen=10)
-    thumbup_1 = deque(list(ges_data["mpu1"])[-10:], maxlen=10)
-    thumbup_2 = deque(list(ges_data["mpu2"])[-10:], maxlen=10)
+    thumbup_0 = deque(list(ges_data["mpu0"])[-5:], maxlen=5)
+    thumbup_1 = deque(list(ges_data["mpu1"])[-5:], maxlen=5)
+    thumbup_2 = deque(list(ges_data["mpu2"])[-5:], maxlen=5)
     ges_data = load_recorded_data('thumbdown.json')
-    thumbdown_0 = deque(list(ges_data["mpu0"])[-10:], maxlen=10)
-    thumbdown_1 = deque(list(ges_data["mpu1"])[-10:], maxlen=10)
-    thumbdown_2 = deque(list(ges_data["mpu2"])[-10:], maxlen=10)
+    thumbdown_0 = deque(list(ges_data["mpu0"])[-5:], maxlen=5)
+    thumbdown_1 = deque(list(ges_data["mpu1"])[-5:], maxlen=5)
+    thumbdown_2 = deque(list(ges_data["mpu2"])[-5:], maxlen=5)
+    ges_data = load_recorded_data('pinchin.json')
+    pinch_0 = deque(ges_data["mpu0"], maxlen=15)
+    pinch_1 = deque(ges_data["mpu1"], maxlen=15)
+    pinch_2 = deque(ges_data["mpu2"], maxlen=15)
 
     # recognizers
     ges1 = threading.Thread(target=ges_thumb_up)

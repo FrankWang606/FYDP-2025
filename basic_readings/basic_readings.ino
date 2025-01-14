@@ -9,6 +9,8 @@ Adafruit_MPU6050 mpu0;
 Adafruit_MPU6050 mpu1;
 Adafruit_MPU6050 mpu2;
 
+sample_rate = 100; // unit is in Hz
+
 void configureMPU(Adafruit_MPU6050 &mpu) {
   mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
   mpu.setGyroRange(MPU6050_RANGE_1000_DEG);

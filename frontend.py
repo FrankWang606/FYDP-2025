@@ -77,7 +77,7 @@ class GestureApp(QWidget):
         layout.addLayout(buttons_layout)  # 添加按钮行到主布局
 
         gestures = ["thumb up", "thumb down", "wave", "pinch in", "palm flip", "record"]
-        keys = ["", "up", "down", "left", "right", "enter", "double click", "right click"]
+        keys = ["", "up", "down", "left", "right", "enter", "double click", "right click", "esc"]
 
         self.blocks = []
         self.combos = []

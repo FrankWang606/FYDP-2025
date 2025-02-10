@@ -1,6 +1,7 @@
 import sys
 import json
-import serial
+import asyncio
+from bleak import BleakClient, BleakScanner
 from collections import deque
 import threading
 import time
@@ -27,7 +28,8 @@ lock = threading.Lock()
 
 current_gesture = -1 # 0 thumb up, 1 thumb down, 2 wave, 3 pinch in, 4 palm flip, 5 self record
 # 设置串口参数
-ser = serial.Serial('COM3', 9600)  # 根据实际情况更改 COM 端口
+MPU_SERVICE_UUID = "180C"  # Arduino 定义的 BLE 服务 UUID
+MPU_CHARACTERISTIC_UUID = "2A56"  # Arduino 发送数据的 BLE 特征 UUID
 
 # 创建三个双端队列
 mpu0_queue = deque(maxlen=15)
@@ -50,6 +52,7 @@ pinch_1 = deque(maxlen=15)
 pinch_2 = deque(maxlen=15)
 # 定义一个标志位用于控制线程的运行
 running = True
+ble_connected_event = threading.Event()  # **新增：用于同步 BLE 连接状态**
 
 def load_recorded_data(file_path):
     """从 JSON 文件加载录制手势数据并还原为 MPUData 队列"""
@@ -124,23 +127,83 @@ def parse_data(data):
         return mpu_name, MPUData(ax, ay, az, rx, ry, rz)
     return None, None
 
-# 读取串口数据的函数
-def read_data():
-    global running
-    while running:
-        if ser.in_waiting > 0:
-            try:
-                data = ser.readline().decode('utf-8').strip()
-            except UnicodeDecodeError:
-                continue
-            mpu_name, mpu_data = parse_data(data)
-            if mpu_name == "MPU0":
-                mpu0_queue.append(mpu_data)
-            elif mpu_name == "MPU1":
-                mpu1_queue.append(mpu_data)
-            elif mpu_name == "MPU2":
-                mpu2_queue.append(mpu_data)
+# # 读取串口数据的函数
+# def read_data():
+#     global running
+#     while running:
+#         if ser.in_waiting > 0:
+#             try:
+#                 data = ser.readline().decode('utf-8').strip()
+#             except UnicodeDecodeError:
+#                 continue
+#             mpu_name, mpu_data = parse_data(data)
+#             if mpu_name == "MPU0":
+#                 mpu0_queue.append(mpu_data)
+#             elif mpu_name == "MPU1":
+#                 mpu1_queue.append(mpu_data)
+#             elif mpu_name == "MPU2":
+#                 mpu2_queue.append(mpu_data)
 
+async def handle_ble_data(sender, data):
+    """ 解析 Arduino 发送的 BLE 数据 """
+    try:
+        data_str = data.decode("utf-8").strip()
+        for line in data_str.split("\n"):
+            parts = line.split(",")
+            if len(parts) == 7:
+                mpu_name, ax, ay, az, rx, ry, rz = parts
+                mpu_data = MPUData(float(ax), float(ay), float(az), float(rx), float(ry), float(rz))
+
+                if mpu_name == "MPU0":
+                    mpu0_queue.append(mpu_data)
+                elif mpu_name == "MPU1":
+                    mpu1_queue.append(mpu_data)
+                elif mpu_name == "MPU2":
+                    mpu2_queue.append(mpu_data)
+
+                print(f"Received {mpu_name}: {mpu_data}")
+
+    except Exception as e:
+        print(f"数据解析错误: {e}")
+
+async def ble_read_data():
+    """ 连接 Arduino 并持续读取 BLE 数据 """
+    global running
+
+    while running:
+        print("🔍 扫描 BLE 设备...")
+        devices = await BleakScanner.discover()
+        arduino_device = None
+
+        for device in devices:
+            if device.name and "GestureDevice" in device.name:  # 先检查 device.name 是否 None
+                arduino_device = device
+                break
+
+        if not arduino_device:
+            print("❌ 未找到 Arduino BLE 设备，3 秒后重试...")
+            await asyncio.sleep(3)
+            continue  # 继续扫描
+
+        try:
+            async with BleakClient(arduino_device.address) as client:
+                print(f"✅ 连接到 {arduino_device.address}")
+                ble_connected_event.set()  # **新增：通知主线程 BLE 已连接**
+                await client.start_notify(MPU_CHARACTERISTIC_UUID, handle_ble_data)
+
+                while running:
+                    await asyncio.sleep(0.1)  # 保持连接
+
+        except Exception as e:
+            print(f"⚠️ BLE 连接丢失，尝试重连: {e}")
+            ble_connected_event.clear()  # **新增：如果 BLE 断开，重置事件**
+            await asyncio.sleep(5)  # 5 秒后重连
+
+# **在独立线程中运行 BLE 监听**
+def read_data():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(ble_read_data())
 
 # recognizers
 def ges_thumb_up():
@@ -237,9 +300,15 @@ def record_state_print(state):
 if __name__ == "__main__":
     keyboard.add_hotkey('q', lambda: set_running_false())
     record_state_print(-1)
-    # 启动一个线程读取串口数据
-    thread = threading.Thread(target=read_data)
-    thread.start()
+    # **1️⃣ 启动 BLE 读取线程**
+    print("🔵 启动 BLE 监听...")
+    ble_thread = threading.Thread(target=read_data)
+    ble_thread.start()
+
+    # **2️⃣ 等待 BLE 连接成功**
+    print("⏳ 等待 BLE 连接 GestureDevice...")
+    ble_connected_event.wait()  # **阻塞主线程，直到 BLE 连接成功**
+    print("✅ BLE 连接成功，启动其他线程！")
     
     ges_data = load_recorded_data('thumbup.json')
     thumbup_0 = deque(list(ges_data["mpu0"])[-5:], maxlen=5)

@@ -150,6 +150,9 @@ class GestureApp(QWidget):
 
                             # 执行按键绑定
                             if state in range(6) and self.key_bindings[state]:
+                                # if last_state == state:
+                                #     time.sleep(2)
+                                #     last_state = -1
                                 action = self.key_bindings[state]
                                 if action == "double click":
                                     pyautogui.doubleClick()
@@ -158,6 +161,7 @@ class GestureApp(QWidget):
                                 else:
                                     pyautogui.press(action)
                                 time.sleep(2)
+                                    
                         except ValueError:
                             colors = ["white", "white", "white", "white", "white", "white"]
 
@@ -165,6 +169,7 @@ class GestureApp(QWidget):
                             palette = self.blocks[i].palette()
                             palette.setColor(QPalette.Window, QColor(color))
                             self.blocks[i].setPalette(palette)
+                        
                         time.sleep(0.1)
 
     def record_gesture(self):

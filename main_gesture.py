@@ -10,7 +10,7 @@ from mpudata import MPUData
 import rec_algorithm as Recognizer 
 
 def mpu_data_to_dict(obj):
-    """将 MPUData 对象转换为字典"""
+
     if isinstance(obj, MPUData):
         return {
             "ax": obj.ax,
@@ -171,7 +171,7 @@ async def ble_read_data():
     global running
 
     while running:
-        print("🔍 扫描 BLE 设备...")
+        print("🔍 scanning BLE devices...")
         devices = await BleakScanner.discover()
         arduino_device = None
 
@@ -181,13 +181,13 @@ async def ble_read_data():
                 break
 
         if not arduino_device:
-            print("❌ 未找到 Arduino BLE 设备，3 秒后重试...")
+            print("❌ no Arduino BLE retry in 3s...")
             await asyncio.sleep(3)
             continue  # 继续扫描
 
         try:
             async with BleakClient(arduino_device.address) as client:
-                print(f"✅ 连接到 {arduino_device.address}")
+                print(f"✅ connected to {arduino_device.address}")
                 ble_connected_event.set()  # **新增：通知主线程 BLE 已连接**
                 await client.start_notify(MPU_CHARACTERISTIC_UUID, handle_ble_data)
 
@@ -195,7 +195,7 @@ async def ble_read_data():
                     await asyncio.sleep(0.1)  # 保持连接
 
         except Exception as e:
-            print(f"⚠️ BLE 连接丢失，尝试重连: {e}")
+            print(f"⚠️ BLE lost，reconnect: {e}")
             ble_connected_event.clear()  # **新增：如果 BLE 断开，重置事件**
             await asyncio.sleep(5)  # 5 秒后重连
 
@@ -301,14 +301,14 @@ if __name__ == "__main__":
     keyboard.add_hotkey('q', lambda: set_running_false())
     record_state_print(-1)
     # **1️⃣ 启动 BLE 读取线程**
-    print("🔵 启动 BLE 监听...")
+    print("🔵 start BLE listener...")
     ble_thread = threading.Thread(target=read_data)
     ble_thread.start()
 
     # **2️⃣ 等待 BLE 连接成功**
-    print("⏳ 等待 BLE 连接 GestureDevice...")
+    print("⏳ wait BLE GestureDevice...")
     ble_connected_event.wait()  # **阻塞主线程，直到 BLE 连接成功**
-    print("✅ BLE 连接成功，启动其他线程！")
+    print("✅ BLE connected！")
     
     ges_data = load_recorded_data('thumbup.json')
     thumbup_0 = deque(list(ges_data["mpu0"])[-5:], maxlen=5)

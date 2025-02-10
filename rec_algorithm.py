@@ -125,6 +125,8 @@ def record(mpu0, mpu1, mpu2, mpu_record0, mpu_record1, mpu_record2, threshold=4.
 
     def calculate_average_distance(real, recorded):
         distances = [calculate_distance(real[i], recorded[i]) for i in range(len(real))]
+        if len(distances) == 0:
+            return 10000
         return sum(distances) / len(distances)
 
     avg_distance_mpu0 = calculate_average_distance(mpu0, mpu_record0)

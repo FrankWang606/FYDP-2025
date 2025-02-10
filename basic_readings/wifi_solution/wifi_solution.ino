@@ -96,7 +96,7 @@ void loop() {
             Serial.println(data);
 
 
-            delay(10);
+            delay(50);
         }
 
         Serial.println("BLE disconnect");
